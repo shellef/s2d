@@ -1,0 +1,114 @@
+"""
+LLM Service - GPT-4o integration for document processing.
+"""
+
+import logging
+from typing import Any, Dict, List, Optional
+from openai import AsyncOpenAI
+from backend.config import get_settings
+from core.prompt_builder import build_update_prompt
+from core.patch_generator import parse_llm_response, validate_patch
+
+logger = logging.getLogger(__name__)
+
+
+class LLMService:
+    """
+    Service for processing transcription with GPT-4o and generating JSON Patch operations.
+
+    Handles prompt construction, API communication, and response parsing.
+    """
+
+    def __init__(self):
+        """Initialize LLM service with OpenAI client."""
+        settings = get_settings()
+        self.client = AsyncOpenAI(api_key=settings.openai_api_key)
+        self.model = settings.gpt_model
+
+    async def process_transcription(
+        self,
+        transcription_tail: str,
+        current_document: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
+        """
+        Process transcription tail with GPT-4o and return JSON Patch operations.
+
+        Args:
+            transcription_tail: Overlapping window of recent transcription (typically 250 words)
+            current_document: Current document state for context
+
+        Returns:
+            List of JSON Patch operations to apply to the document
+
+        Raises:
+            Exception: If LLM processing fails or response is invalid
+        """
+        if not transcription_tail or not transcription_tail.strip():
+            logger.warning("Empty transcription tail received")
+            return []
+
+        try:
+            # Build prompt with current document and transcription tail
+            messages = build_update_prompt(transcription_tail, current_document)
+
+            logger.info(f"Processing {len(transcription_tail)} chars with GPT-4o")
+
+            # Call GPT-4o
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                temperature=0.1,  # Low temperature for consistency
+                max_tokens=2000  # Sufficient for patch operations
+            )
+
+            # Extract content
+            content = response.choices[0].message.content
+
+            if not content:
+                logger.warning("Empty response from GPT-4o")
+                return []
+
+            logger.debug(f"GPT-4o response: {content[:200]}...")
+
+            # Parse JSON Patch operations
+            try:
+                patch_ops = parse_llm_response(content)
+            except ValueError as e:
+                logger.error(f"Failed to parse LLM response: {e}")
+                logger.debug(f"Raw response: {content}")
+                raise Exception(f"Failed to parse LLM response: {str(e)}")
+
+            # Validate patch operations
+            is_valid, error = validate_patch(patch_ops, current_document)
+            if not is_valid:
+                logger.error(f"Invalid patch from LLM: {error}")
+                logger.debug(f"Patch operations: {patch_ops}")
+                # Return empty list instead of raising error (graceful degradation)
+                return []
+
+            logger.info(f"Generated {len(patch_ops)} patch operations")
+            return patch_ops
+
+        except Exception as e:
+            logger.error(f"LLM processing failed: {e}", exc_info=True)
+            # Return empty list for graceful degradation (don't break the flow)
+            return []
+
+
+# Global service instance
+_llm_service: Optional[LLMService] = None
+
+
+def get_llm_service() -> LLMService:
+    """
+    Get the global LLM service instance.
+
+    Returns:
+        LLMService instance
+    """
+    global _llm_service
+
+    if _llm_service is None:
+        _llm_service = LLMService()
+
+    return _llm_service
