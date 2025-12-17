@@ -11,6 +11,7 @@ from typing import Optional
 from backend.services.session_manager import get_session_manager
 from backend.services.transcription_service import get_transcription_service
 from backend.services.llm_service import get_llm_service
+from backend.services.connection_manager import get_connection_manager
 from backend.models.message import (
     parse_client_message,
     create_transcription_message,
@@ -42,23 +43,21 @@ async def websocket_endpoint(websocket: WebSocket, session_id: Optional[str] = N
         websocket: WebSocket connection
         session_id: Optional session ID from query params
     """
-    # Accept connection
-    await websocket.accept()
-    logger.info(f"WebSocket connection accepted (session_id={session_id})")
+    logger.info(f"WebSocket connection request (session_id={session_id})")
 
     # Get services
     session_manager = get_session_manager()
     transcription_service = get_transcription_service()
     llm_service = get_llm_service()
+    connection_manager = get_connection_manager()
 
     # Create or get session
     try:
         if session_id:
             session = session_manager.get_session(session_id)
             if not session:
-                await websocket.send_json(create_error_message("Session not found"))
-                await websocket.close()
-                return
+                # Create session if it doesn't exist
+                session = session_manager.create_session(session_id=session_id)
         else:
             session = session_manager.create_session()
             session_id = session.session_id
@@ -67,9 +66,13 @@ async def websocket_endpoint(websocket: WebSocket, session_id: Optional[str] = N
 
     except Exception as e:
         logger.error(f"Failed to create/get session: {e}")
+        await websocket.accept()
         await websocket.send_json(create_error_message(f"Session error: {str(e)}"))
         await websocket.close()
         return
+
+    # Register connection with connection manager
+    await connection_manager.connect(websocket, session_id)
 
     try:
         # Main message loop
@@ -218,8 +221,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: Optional[str] = N
     except Exception as e:
         logger.error(f"WebSocket error: {e}", exc_info=True)
     finally:
-        # Clean up session on disconnect
-        # Note: For production, you might want to keep the session for a while
-        # in case the client reconnects
-        logger.info(f"Cleaning up session {session_id}")
-        # session_manager.cleanup_session(session_id)  # Commented out - keep session for now
+        # Disconnect from connection manager
+        connection_manager.disconnect(websocket, session_id)
+        logger.info(f"WebSocket connection cleaned up for session {session_id}")
+        # Note: We keep the session alive for potential reconnects

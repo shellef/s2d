@@ -12,6 +12,11 @@ export function useWebSocket(url) {
   const reconnectAttempts = useRef(0);
 
   const connect = useCallback(() => {
+    if (!url) {
+      console.log('WebSocket URL not provided, skipping connection');
+      return;
+    }
+
     try {
       const ws = new WebSocket(url);
 

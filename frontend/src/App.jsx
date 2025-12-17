@@ -12,7 +12,8 @@ import { SimpleAudioCapture } from './components/SimpleAudioCapture';
 import './styles/main.css';
 
 function App() {
-  const wsUrl = 'ws://localhost:8000/ws';
+  const [sessionId, setSessionId] = useState(null);
+  const wsUrl = sessionId ? `ws://localhost:8000/ws?session_id=${sessionId}` : null;
   const { isConnected, lastMessage, sendMessage } = useWebSocket(wsUrl);
 
   const {
@@ -68,7 +69,11 @@ function App() {
             isConnected={isConnected}
             isRecording={isRecording}
           />
-          <SimpleAudioCapture onRecordingChange={setIsRecording} />
+          <SimpleAudioCapture
+            onRecordingChange={setIsRecording}
+            sessionId={sessionId}
+            onSessionIdChange={setSessionId}
+          />
         </div>
       </header>
 
