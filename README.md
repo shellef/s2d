@@ -1,15 +1,15 @@
 # Speech-to-Document (S2D)
 
-Real-time speech-to-text webapp that uses OpenAI Whisper for transcription and GPT-4o to populate a structured process document.
+Real-time speech-to-text webapp that uses OpenAI Whisper for transcription and an LLM to populate a structured process document.
 
 ## Features
 
 - **Real-time Transcription**: Uses OpenAI Whisper API for accurate speech-to-text (~3-5 second latency)
-- **Intelligent Document Updates**: GPT-4o processes transcription and updates structured document via JSON Patch (RFC 6902)
-- **Overlapping Context**: Consecutive transcriptions overlap to help GPT understand corrections ("actually, change that to...")
+- **Intelligent Document Updates**: LLM processes transcription and updates structured document via JSON Patch (RFC 6902)
+- **Overlapping Context**: Consecutive transcriptions overlap to help LLM understand corrections ("actually, change that to...")
 - **JSON Patch Support**: Supports add, replace, and remove operations for precise document updates
 - **WebSocket Communication**: Real-time bidirectional communication between frontend and backend
-- **Immediate Processing**: GPT-4o processes new transcription as soon as it arrives (no artificial delays)
+- **Immediate Processing**: LLM processes new transcription as soon as it arrives (no artificial delays)
 
 ## Architecture
 
@@ -18,7 +18,7 @@ Real-time speech-to-text webapp that uses OpenAI Whisper for transcription and G
 **Backend:**
 - Python 3.10+
 - FastAPI for REST API and WebSocket
-- OpenAI API (Whisper + GPT-4o)
+- OpenAI API (Whisper for transcription, configurable LLM for processing)
 - Pydantic for data validation
 - JSON Patch (RFC 6902) for document updates
 
@@ -36,7 +36,7 @@ s2d/
 │   ├── templates.py              # Document schema (PROCESS_TEMPLATE)
 │   ├── transcription_buffer.py   # Overlapping window extraction
 │   ├── patch_generator.py        # JSON Patch validation/application
-│   └── prompt_builder.py         # GPT-4o prompt construction
+│   └── prompt_builder.py         # LLM prompt construction
 ├── backend/                       # FastAPI backend
 │   ├── main.py                   # FastAPI app entry point
 │   ├── config.py                 # Configuration management
@@ -45,7 +45,7 @@ s2d/
 │   │   └── websocket.py         # WebSocket handler
 │   ├── services/
 │   │   ├── transcription_service.py  # Whisper API integration
-│   │   ├── llm_service.py           # GPT-4o integration
+│   │   ├── llm_service.py           # LLM integration
 │   │   └── session_manager.py       # Session state management
 │   └── models/
 │       ├── session.py           # Session data model
@@ -63,7 +63,7 @@ s2d/
 ### Prerequisites
 
 - Python 3.10 or higher
-- OpenAI API key with access to Whisper and GPT-4o
+- OpenAI API key with access to Whisper and the configured LLM model
 
 ### Installation
 
@@ -89,10 +89,10 @@ pip install -r requirements.txt
 4. **Configure environment variables**
 
 ```bash
-cp .env.example .env
+cp .env.example ~/.env.s2d
 ```
 
-Edit `.env` and add your OpenAI API key:
+Edit `~/.env.s2d` and add your OpenAI API key:
 
 ```bash
 OPENAI_API_KEY=sk-your-actual-api-key-here
@@ -241,8 +241,8 @@ The document follows this structure:
 3. Backend transcribes with Whisper API
 4. Transcription sent to client immediately
 5. Transcription added to buffer (overlapping window)
-6. GPT-4o processes transcription tail + current document
-7. GPT-4o returns JSON Patch operations
+6. LLM processes transcription tail + current document
+7. LLM returns JSON Patch operations
 8. Patches applied to document
 9. Patches sent to client
 10. Client applies patches to UI
@@ -250,11 +250,11 @@ The document follows this structure:
 
 ### Key Design Decisions
 
-1. **Immediate GPT Processing**: No artificial delays - GPT processes as soon as new transcription arrives
-2. **Overlapping Context**: 250-word windows with overlap help GPT understand corrections
+1. **Immediate LLM Processing**: No artificial delays - LLM processes as soon as new transcription arrives
+2. **Overlapping Context**: 250-word windows with overlap help LLM understand corrections
 3. **JSON Patch Updates**: RFC 6902 patches enable precise updates (add/replace/remove)
-4. **Context in Messages**: Current document passed in user message to GPT, not in system prompt
-5. **Graceful Degradation**: If GPT fails, transcription still works
+4. **Context in Messages**: Current document passed in user message to LLM, not in system prompt
+5. **Graceful Degradation**: If LLM fails, transcription still works
 
 ## Testing the Backend
 
@@ -328,7 +328,7 @@ The codebase follows these principles:
 
 ### "OPENAI_API_KEY must be set"
 
-Make sure you've created a `.env` file (copy from `.env.example`) and added your OpenAI API key.
+Make sure you've created a `~/.env.s2d` file (copy from `.env.example`) and added your OpenAI API key.
 
 ### "Module not found" errors
 
@@ -351,32 +351,65 @@ pip install -r requirements.txt
 - Check your internet connection
 - Check OpenAI API status
 
-### GPT-4o not generating patches
+### LLM not generating patches
 
 - Check logs for errors: `uvicorn backend.main:app --log-level=debug`
-- Verify your OpenAI API key has access to GPT-4o
+- Verify your OpenAI API key has access to the configured model (check `config.yaml`)
 - Check API rate limits
 
 ## Configuration
 
-### Environment Variables
+The application uses a two-file configuration approach:
 
-All configuration is in `.env` file:
+### 1. Secrets (`~/.env.s2d`)
+
+Secrets and API keys are stored in `~/.env.s2d` (not tracked in git):
 
 ```bash
 # Required
 OPENAI_API_KEY=sk-...
 
-# Optional (defaults shown)
-WHISPER_MODEL=whisper-1
-GPT_MODEL=gpt-4o
-AUDIO_CHUNK_DURATION=3
-TRANSCRIPTION_WINDOW_SIZE=250
-HOST=localhost
-PORT=8000
-FRONTEND_URL=http://localhost:5173
-SESSION_TIMEOUT_MINUTES=60
-MAX_SESSIONS=100
+# Optional
+ASSEMBLYAI_API_KEY=your-key
+LIVEKIT_URL=ws://localhost:7880
+LIVEKIT_API_KEY=your-key
+LIVEKIT_API_SECRET=your-secret
+```
+
+Create this file by copying [.env.example](.env.example):
+```bash
+cp .env.example ~/.env.s2d
+```
+
+### 2. Regular Parameters (`config.yaml`)
+
+Regular configuration parameters are in [config.yaml](config.yaml) (tracked in git):
+
+```yaml
+whisper_model: "whisper-1"
+gpt_model: "gpt-4o"
+audio_chunk_duration: 3
+transcription_window_size: 250
+patch_history_count: 5
+host: "localhost"
+port: 8000
+frontend_url: "http://localhost:5173"
+session_timeout_minutes: 60
+max_sessions: 100
+verbose_llm_logging: false
+```
+
+### Override Priority
+
+Configuration values can be overridden with this priority (highest to lowest):
+1. Environment variables
+2. `~/.env.s2d` file
+3. `config.yaml` file
+4. Default values
+
+Example: To override the port, set the environment variable:
+```bash
+PORT=9000 uvicorn backend.main:app
 ```
 
 ## Future Enhancements

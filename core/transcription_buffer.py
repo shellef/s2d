@@ -1,7 +1,7 @@
 """
 Transcription Buffer - Manages speech-to-text transcription with overlapping windows.
 
-This module provides overlapping window extraction for GPT-4o processing,
+This module provides overlapping window extraction for LLM processing,
 ensuring continuity and context for understanding corrections and references.
 """
 
@@ -11,7 +11,7 @@ class TranscriptionBuffer:
     Manages transcription history with overlapping window extraction.
 
     Consecutive calls to get_tail() return overlapping windows to provide
-    context continuity for GPT-4o. This helps the LLM understand corrections
+    context continuity for the LLM. This helps the LLM understand corrections
     like "actually, change that to..." and maintain coherent updates.
     """
 
@@ -55,7 +55,7 @@ class TranscriptionBuffer:
 
         Always returns the last window_size words, regardless of what's been
         "processed" before. This creates overlapping context between consecutive
-        GPT-4o calls, helping the model understand corrections and references.
+        LLM calls, helping the model understand corrections and references.
 
         Returns:
             String containing the last window_size words from the transcription.

@@ -31,18 +31,21 @@ LIVEKIT_API_KEY=APIxxxxxxxxx
 LIVEKIT_API_SECRET=secretxxxxxxxx
 ```
 
-**2. Update Your .env File**
+**2. Update Your ~/.env.s2d File**
 
 ```bash
-# Create .env from example
-cp .env.example .env
+# Create ~/.env.s2d from example
+cp .env.example ~/.env.s2d
 
-# Add these to .env:
-ASSEMBLYAI_API_KEY=c62f057171f846cba51cf6d27a1d689d
-LIVEKIT_URL=wss://your-project.livekit.cloud  # From step 1
-LIVEKIT_API_KEY=<from-livekit-dashboard>       # From step 1
-LIVEKIT_API_SECRET=<from-livekit-dashboard>    # From step 1
-OPENAI_API_KEY=<your-existing-key>
+# Add these secrets to ~/.env.s2d:
+OPENAI_API_KEY=<your-existing-key>              # Required
+ASSEMBLYAI_API_KEY=your-assemblyai-api-key      # Optional
+LIVEKIT_URL=wss://your-project.livekit.cloud    # From step 1
+LIVEKIT_API_KEY=<from-livekit-dashboard>        # From step 1
+LIVEKIT_API_SECRET=<from-livekit-dashboard>     # From step 1
+
+# Note: Regular configuration (models, ports, etc.) is in config.yaml at repo root
+# You can override config.yaml values by adding them to ~/.env.s2d if needed
 ```
 
 **3. Test the Current Whisper Fix**

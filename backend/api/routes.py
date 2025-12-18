@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from backend.services.session_manager import get_session_manager
 from backend.services.connection_manager import get_connection_manager
 from backend.services.llm_service import get_llm_service
+from backend.config import get_settings
 from backend.models.message import create_transcription_message, create_document_patch_message
 from core.patch_generator import apply_patch
 
@@ -202,10 +203,18 @@ async def add_transcription(
             # Get transcription tail for LLM processing
             tail = session.get_transcription_tail()
 
+            # Get patch history from session
+            patch_history = session.patch_history
+
+            # Get max count from settings
+            settings = get_settings()
+            max_history_count = settings.patch_history_count
+
             # Generate document patches
             patch_ops = await llm_service.process_transcription(
                 tail,
-                session.document
+                session.document,
+                patch_history
             )
 
             # Apply patches to session document
@@ -213,6 +222,9 @@ async def add_transcription(
                 try:
                     updated_document = apply_patch(patch_ops, session.document)
                     session.update_document(updated_document)
+
+                    # Add patches to history
+                    session.add_patch_to_history(patch_ops, max_history_count)
 
                     # Broadcast patches to all connected WebSocket clients
                     await connection_manager.broadcast_to_session(

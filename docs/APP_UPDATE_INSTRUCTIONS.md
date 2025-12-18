@@ -1,6 +1,6 @@
 # How to Switch to LiveKit in Your App
 
-Once you have LiveKit credentials in `.env`, make these simple changes to `frontend/src/App.jsx`:
+Once you have LiveKit credentials in `~/.env.s2d`, make these simple changes to `frontend/src/App.jsx`:
 
 ## Option 1: Quick Test (Minimal Changes)
 
@@ -31,7 +31,7 @@ The transcriptions will come through your existing WebSocket connection from the
 
 - Your WebSocket connection to backend (`useWebSocket`)
 - Document state management (`useDocument`)
-- GPT-4o processing pipeline
+- LLM processing pipeline
 - All UI components
 
 ## What Changes

@@ -319,7 +319,7 @@ The application uses a combination of:
    - Chunks sent to backend via WebSocket
    - Backend transcribes with Whisper (~3-5s)
    - Transcription appears immediately in transcript panel
-   - Backend processes tail with GPT-4o
+   - Backend processes tail with LLM
    - Patches applied to document
    - Document updates in real-time
 
@@ -373,7 +373,7 @@ The application uses a combination of:
 
 **Solutions**:
 - Check browser console for patch application errors
-- Verify GPT-4o API access and rate limits
+- Verify LLM API access and rate limits
 - Check backend logs for LLM service errors
 - Inspect WebSocket messages in browser DevTools
 
@@ -470,7 +470,7 @@ npm run preview
 - **WebSocket Latency**: < 100ms (local network)
 - **Audio Chunk**: 3 seconds
 - **Transcription**: 3-5 seconds (Whisper API)
-- **Document Update**: 5-7 seconds total (transcription + GPT-4o)
+- **Document Update**: 5-7 seconds total (transcription + LLM)
 
 ## Future Enhancements
 
@@ -491,7 +491,7 @@ npm run preview
 ### Long-term
 - Mobile app (React Native)
 - Offline mode
-- Custom GPT-4o prompts
+- Custom LLM prompts
 - Integration with process tools
 - Advanced analytics
 
@@ -502,4 +502,4 @@ Built with:
 - Vite 5
 - Tailwind CSS 3
 - fast-json-patch
-- OpenAI API (Whisper + GPT-4o)
+- OpenAI API (Whisper + LLM)

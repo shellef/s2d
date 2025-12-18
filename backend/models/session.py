@@ -34,6 +34,12 @@ class Session(BaseModel):
         description="Current document state matching PROCESS_TEMPLATE schema"
     )
 
+    # Patch history
+    patch_history: List[List[Dict[str, Any]]] = Field(
+        default_factory=list,
+        description="History of recent patch operations for LLM context"
+    )
+
     # Audio buffering
     audio_chunks: List[bytes] = Field(
         default_factory=list,
@@ -64,7 +70,7 @@ class Session(BaseModel):
 
     def get_transcription_tail(self) -> str:
         """
-        Get overlapping window of recent transcription for GPT-4o processing.
+        Get overlapping window of recent transcription for LLM processing.
 
         Returns:
             Last N words of transcription (overlapping window)
@@ -89,6 +95,20 @@ class Session(BaseModel):
         """
         self.document = new_document
         self.updated_at = datetime.utcnow()
+
+    def add_patch_to_history(self, patch_ops: List[Dict[str, Any]], max_count: int = 5) -> None:
+        """
+        Add patch operations to history, maintaining a maximum count.
+
+        Args:
+            patch_ops: List of JSON Patch operations to add
+            max_count: Maximum number of patch sets to keep in history
+        """
+        if patch_ops:  # Only add non-empty patches
+            self.patch_history.append(patch_ops)
+            # Trim to max_count (remove oldest)
+            if len(self.patch_history) > max_count:
+                self.patch_history = self.patch_history[-max_count:]
 
     def mark_stopped(self) -> None:
         """Mark session as stopped (recording ended)."""

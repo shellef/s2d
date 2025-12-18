@@ -35,7 +35,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: Optional[str] = N
     1. Client connects and sends audio chunks
     2. Server transcribes with Whisper immediately
     3. Server sends transcription to client
-    4. Server processes transcription tail with GPT-4o immediately
+    4. Server processes transcription tail with LLM immediately
     5. Server sends JSON Patch operations to client
     6. Repeat until client stops recording
 
@@ -127,10 +127,10 @@ async def websocket_endpoint(websocket: WebSocket, session_id: Optional[str] = N
                         has_new_text = session.add_transcription(text)
 
                         if has_new_text:
-                            # Get overlapping tail for GPT-4o
+                            # Get overlapping tail for LLM
                             tail = session.get_transcription_tail()
 
-                            # Process with GPT-4o immediately (no delay)
+                            # Process with LLM immediately (no delay)
                             try:
                                 patch_ops = await llm_service.process_transcription(
                                     tail,
@@ -178,7 +178,7 @@ async def websocket_endpoint(websocket: WebSocket, session_id: Optional[str] = N
                 # Forward transcription to client
                 await websocket.send_json(create_transcription_message(message.text))
 
-                # Process with GPT-4o to generate document updates
+                # Process with LLM to generate document updates
                 await websocket.send_json(
                     create_status_message("processing", "Generating document updates...")
                 )

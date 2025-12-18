@@ -6,7 +6,7 @@ We're replacing the problematic MediaRecorder → Whisper API flow with LiveKit 
 
 ## Setup Steps
 
-### 1. Add API Keys to .env
+### 1. Add API Keys to ~/.env.s2d
 
 ```bash
 # Get your AssemblyAI API key from: https://www.assemblyai.com/dashboard
@@ -52,7 +52,7 @@ LiveKit Server
 AssemblyAI Real-Time STT
     ↓ (Transcripts)
 Your Backend WebSocket
-    ↓ (Process with GPT-4o)
+    ↓ (Process with LLM)
 Frontend (Document Updates)
 ```
 

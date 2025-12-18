@@ -4,16 +4,16 @@ The LiveKit integration is now fully configured and ready to use. Follow these s
 
 ## Prerequisites
 
-Make sure your `.env` file has these credentials:
+Make sure your `~/.env.s2d` file has these credentials (use `.env.example` as a template):
 
 ```bash
 # AssemblyAI API
-ASSEMBLYAI_API_KEY=c62f057171f846cba51cf6d27a1d689d
+ASSEMBLYAI_API_KEY=your-assemblyai-api-key
 
 # LiveKit Cloud
-LIVEKIT_URL=wss://first-lrohe7si.livekit.cloud
-LIVEKIT_API_KEY=APIteQkPqYrZbnX
-LIVEKIT_API_SECRET=ZYfpBsP7MxeG8ghORhi8BgDxdObehjwNxrJLdFNRvSMB
+LIVEKIT_URL=wss://your-project.livekit.cloud
+LIVEKIT_API_KEY=your-livekit-api-key
+LIVEKIT_API_SECRET=your-livekit-secret
 ```
 
 ## Starting All Services
@@ -31,10 +31,8 @@ This starts the FastAPI backend on `http://localhost:8000`
 ### Terminal 2: LiveKit Transcription Agent
 ```bash
 cd /home/eric/work/s2d
-export LIVEKIT_URL=wss://first-lrohe7si.livekit.cloud
-export LIVEKIT_API_KEY=APIteQkPqYrZbnX
-export LIVEKIT_API_SECRET=ZYfpBsP7MxeG8ghORhi8BgDxdObehjwNxrJLdFNRvSMB
-export ASSEMBLYAI_API_KEY=c62f057171f846cba51cf6d27a1d689d
+# Load environment variables from ~/.env.s2d
+source ~/.env.s2d
 python transcription_agent.py start
 ```
 
@@ -61,7 +59,7 @@ This starts the React frontend on `http://localhost:5173` (or next available por
    - Enable your microphone
 3. Start speaking
 4. Watch the transcription appear in real-time
-5. Watch GPT-4o generate formatted documentation
+5. Watch LLM generate formatted documentation
 
 ## Architecture Flow
 
@@ -77,7 +75,7 @@ AssemblyAI API
 Transcription Agent
     ↓ (WebSocket)
 Backend WebSocket (ws://localhost:8000/ws)
-    ↓ (GPT-4o Processing)
+    ↓ (LLM Processing)
 Backend
     ↓ (Document Patches via WebSocket)
 Frontend React App
@@ -136,6 +134,6 @@ Connected to backend WebSocket
 
 Once you verify everything works:
 1. The frontend is already integrated with SimpleAudioCapture
-2. Transcriptions flow automatically to GPT-4o
+2. Transcriptions flow automatically to LLM
 3. Documents update in real-time
 4. No more Whisper format errors!

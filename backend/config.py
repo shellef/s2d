@@ -5,9 +5,35 @@ Loads configuration from environment variables with sensible defaults.
 """
 
 import os
+import yaml
+import logging
+from pathlib import Path
 from typing import Optional
 from pydantic_settings import BaseSettings
 from pydantic import Field
+
+
+def _load_yaml_config() -> dict:
+    """
+    Load configuration from config.yaml file in repo root.
+
+    Returns:
+        Dictionary of config values, or empty dict if file doesn't exist
+    """
+    # Path to config.yaml in repo root (parent of backend/)
+    config_path = Path(__file__).parent.parent / "config.yaml"
+
+    if not config_path.exists():
+        return {}
+
+    try:
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f) or {}
+            return config
+    except Exception as e:
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Failed to load config.yaml: {e}")
+        return {}
 
 
 class Settings(BaseSettings):
@@ -29,6 +55,7 @@ class Settings(BaseSettings):
     # Processing Configuration
     audio_chunk_duration: int = Field(default=3, env="AUDIO_CHUNK_DURATION")
     transcription_window_size: int = Field(default=250, env="TRANSCRIPTION_WINDOW_SIZE")
+    patch_history_count: int = Field(default=5, env="PATCH_HISTORY_COUNT")
 
     # Server Configuration
     host: str = Field(default="localhost", env="HOST")
@@ -39,8 +66,30 @@ class Settings(BaseSettings):
     session_timeout_minutes: int = Field(default=60, env="SESSION_TIMEOUT_MINUTES")
     max_sessions: int = Field(default=100, env="MAX_SESSIONS")
 
+    # Logging Configuration
+    verbose_llm_logging: bool = Field(default=False, env="VERBOSE_LLM_LOGGING")
+
+    def __init__(self, **kwargs):
+        """
+        Initialize settings with layered configuration.
+
+        Priority (highest to lowest):
+        1. Environment variables
+        2. ~/.env.s2d file
+        3. config.yaml file
+        4. Field defaults
+        """
+        # Load YAML config as lowest-priority defaults
+        yaml_config = _load_yaml_config()
+
+        # Merge YAML with any explicit kwargs (kwargs take precedence)
+        merged = {**yaml_config, **kwargs}
+
+        # Call parent __init__ - Pydantic will overlay .env.s2d and env vars
+        super().__init__(**merged)
+
     class Config:
-        env_file = ".env"
+        env_file = os.path.expanduser("~/.env.s2d")
         env_file_encoding = "utf-8"
         case_sensitive = False
 
@@ -53,7 +102,7 @@ def get_settings() -> Settings:
     """
     Get the global settings instance.
 
-    Loads settings from .env file on first call, then caches the instance.
+    Loads settings from ~/.env.s2d file on first call, then caches the instance.
 
     Returns:
         Settings instance with configuration values
@@ -69,8 +118,9 @@ def get_settings() -> Settings:
         # Validate critical settings
         if not _settings.openai_api_key or _settings.openai_api_key == "sk-...":
             raise ValueError(
-                "OPENAI_API_KEY must be set in .env file or environment variables. "
-                "Copy .env.example to .env and add your API key."
+                "OPENAI_API_KEY must be set in ~/.env.s2d or environment. "
+                "Copy .env.example to ~/.env.s2d and add your API key. "
+                "Regular config is in config.yaml."
             )
 
     return _settings

@@ -44,9 +44,11 @@ async def entrypoint(ctx: JobContext):
 
     try:
         # Initialize AssemblyAI STT with your API key
-        stt = assemblyai.STT(
-            api_key=os.getenv("ASSEMBLYAI_API_KEY", "c62f057171f846cba51cf6d27a1d689d")
-        )
+        assemblyai_key = os.getenv("ASSEMBLYAI_API_KEY")
+        if not assemblyai_key:
+            raise ValueError("ASSEMBLYAI_API_KEY environment variable is required")
+
+        stt = assemblyai.STT(api_key=assemblyai_key)
 
         # Subscribe to audio tracks
         async def transcribe_track(track: rtc.RemoteAudioTrack):

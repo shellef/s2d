@@ -20,7 +20,7 @@ Transcription Agent
     ↓ AssemblyAI Streaming
 Real-time Transcription
     ↓ WebSocket
-Backend → GPT-4o → Document Updates
+Backend → LLM → Document Updates
 ```
 
 ## Key Benefits
@@ -61,10 +61,8 @@ python -m backend.main
 **Terminal 2 - Agent:**
 ```bash
 cd /home/eric/work/s2d
-export LIVEKIT_URL=wss://first-lrohe7si.livekit.cloud
-export LIVEKIT_API_KEY=APIteQkPqYrZbnX
-export LIVEKIT_API_SECRET=ZYfpBsP7MxeG8ghORhi8BgDxdObehjwNxrJLdFNRvSMB
-export ASSEMBLYAI_API_KEY=c62f057171f846cba51cf6d27a1d689d
+# Load environment variables from ~/.env.s2d
+source ~/.env.s2d
 python transcription_agent.py start
 ```
 
@@ -93,12 +91,12 @@ This starts all three services in a tmux session.
 
 ## Credentials Summary
 
-All credentials are already in your `.env` file:
+Make sure your `~/.env.s2d` file contains these credentials (use `.env.example` as a template):
 
-- **AssemblyAI API Key**: `c62f057171f846cba51cf6d27a1d689d`
-- **LiveKit URL**: `wss://first-lrohe7si.livekit.cloud`
-- **LiveKit API Key**: `APIteQkPqYrZbnX`
-- **LiveKit Secret**: `ZYfpBsP7MxeG8ghORhi8BgDxdObehjwNxrJLdFNRvSMB`
+- **AssemblyAI API Key**: Your AssemblyAI API key
+- **LiveKit URL**: Your LiveKit cloud URL (wss://your-project.livekit.cloud)
+- **LiveKit API Key**: Your LiveKit API key from dashboard
+- **LiveKit Secret**: Your LiveKit secret from dashboard
 
 ## What Stays the Same
 
@@ -106,7 +104,7 @@ The rest of your application works exactly as before:
 
 - WebSocket connection to backend (`useWebSocket`)
 - Document state management (`useDocument`)
-- GPT-4o processing pipeline
+- LLM processing pipeline
 - JSON Patch document updates
 - All UI components (DocumentView, TranscriptPanel, etc.)
 

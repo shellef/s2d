@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 # Initialize FastAPI app
 app = FastAPI(
     title="Speech-to-Document API",
-    description="Real-time speech-to-text with GPT-4o document generation",
+    description="Real-time speech-to-text with LLM document generation",
     version="1.0.0"
 )
 

@@ -1,0 +1,23 @@
+# Regular Parameters (non-secret configuration)
+# Override by setting environment variables or adding to ~/.env.s2d
+
+# OpenAI Configuration
+gpt_model: "gpt-4o"
+
+# Processing Configuration
+audio_chunk_duration: 3
+transcription_window_size: 250
+patch_history_count: 5
+
+# Server Configuration
+host: "localhost"
+port: 8000
+frontend_url: "http://localhost:5173"
+
+# Session Configuration
+session_timeout_minutes: 60
+max_sessions: 100
+
+# Logging Configuration
+verbose_llm_logging: true
+

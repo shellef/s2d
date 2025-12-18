@@ -11,8 +11,8 @@ if ! command -v tmux &> /dev/null; then
 fi
 
 # Load environment variables
-if [ -f .env ]; then
-    export $(cat .env | grep -v '^#' | xargs)
+if [ -f ~/.env.s2d ]; then
+    export $(cat ~/.env.s2d | grep -v '^#' | xargs)
 fi
 
 # Create new tmux session

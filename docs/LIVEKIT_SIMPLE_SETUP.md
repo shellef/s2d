@@ -18,14 +18,14 @@ Browser → LiveKit → AssemblyAI → Your Backend → Document Updates
    - API Key (starts with `API`)
    - API Secret
 
-## Step 2: Create .env File
+## Step 2: Create ~/.env.s2d File
 
 ```bash
 # Copy example
-cp .env.example .env
+cp .env.example ~/.env.s2d
 
-# Edit .env and add:
-ASSEMBLYAI_API_KEY=c62f057171f846cba51cf6d27a1d689d
+# Edit ~/.env.s2d and add:
+ASSEMBLYAI_API_KEY=your-assemblyai-api-key
 LIVEKIT_URL=wss://your-project-xxxxx.livekit.cloud
 LIVEKIT_API_KEY=APIxxxxxxxxx
 LIVEKIT_API_SECRET=secretxxxxxxxxx
@@ -73,7 +73,7 @@ import { SimpleAudioCapture } from './components/SimpleAudioCapture';
 4. `transcription_agent.py` receives audio from LiveKit
 5. Agent sends audio to AssemblyAI for real-time transcription
 6. Agent forwards transcriptions to your backend WebSocket
-7. Your existing GPT-4o pipeline processes transcriptions
+7. Your existing LLM pipeline processes transcriptions
 8. Document updates sent to frontend
 
 ## Benefits
@@ -87,12 +87,12 @@ import { SimpleAudioCapture } from './components/SimpleAudioCapture';
 
 ## Troubleshooting
 
-**"Failed to connect"**: Check that all three LiveKit env vars are set correctly in .env
+**"Failed to connect"**: Check that all three LiveKit env vars are set correctly in ~/.env.s2d
 
-**Agent not starting**: Make sure you have AssemblyAI API key in .env or as environment variable
+**Agent not starting**: Make sure you have AssemblyAI API key in ~/.env.s2d or as environment variable
 
 **No transcriptions**: Check that the agent is running in Terminal 2
 
 ## That's It!
 
-Once LiveKit credentials are in .env, the whole system works automatically.
+Once LiveKit credentials are in ~/.env.s2d, the whole system works automatically.
